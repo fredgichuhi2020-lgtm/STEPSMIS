@@ -1019,3 +1019,118 @@
                 {id: '1', year: 2024, name: 'Term 1', startDate: '2024-01-08', endDate: '2024-04-05', feesDeadline: '2024-02-15', termFees: 20000, isCurrent: true},
                 {id: '2', year: 2024, name: 'Term 2', startDate: '2024-04-29', endDate: '2024-08-02', feesDeadline: '2024-05-15', termFees: 18000, isCurrent: false},
                 {id: '3', year: 2024, name: 'Term 3', startDate: '2024-08-19', endDate: '2024-11-22', feesDeadline: '2024
+<script>
+// Force data to load when page opens
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🔧 Debug: Page loaded, checking data...');
+    
+    // Check if data exists
+    const students = JSON.parse(localStorage.getItem('students') || '[]');
+    const steuniceStudents = JSON.parse(localStorage.getItem('steunice_students') || '[]');
+    
+    console.log('📊 Students found:', students.length);
+    console.log('📊 Steunice students found:', steuniceStudents.length);
+    
+    // If we have data but it's not showing, force a reload
+    if (students.length > 0 || steuniceStudents.length > 0) {
+        console.log('✅ Data detected, refreshing display...');
+        
+        // Wait a moment for the app to initialize
+        setTimeout(function() {
+            // Try to call the app's functions
+            if (typeof loadStudents === 'function') {
+                loadStudents();
+                console.log('✅ Called loadStudents()');
+            }
+            if (typeof loadPayments === 'function') {
+                loadPayments();
+                console.log('✅ Called loadPayments()');
+            }
+            if (typeof updateDashboard === 'function') {
+                updateDashboard();
+                console.log('✅ Called updateDashboard()');
+            }
+            
+            // Also try to update the students table directly
+            const tbody = document.getElementById('studentsList');
+            if (tbody && students.length > 0) {
+                let html = '';
+                students.forEach(student => {
+                    const balance = student.annualFees - (student.feesPaid || 0);
+                    html += `<tr>
+                        <td>${student.admissionNo || 'N/A'}</td>
+                        <td>${student.name}</td>
+                        <td>${student.class || 'N/A'}</td>
+                        <td>${student.parentName || 'N/A'}</td>
+                        <td>${student.parentPhone || 'N/A'}</td>
+                        <td><span class="status-badge ${balance > 0 ? 'status-unpaid' : 'status-paid'}">KES ${balance.toLocaleString()}</span></td>
+                        <td>
+                            <button class="btn-small" onclick="viewStudent('${student.id}')">👁️</button>
+                        </td>
+                    </tr>`;
+                });
+                tbody.innerHTML = html;
+                console.log('✅ Manually updated students table with', students.length, 'students');
+            }
+        }, 1000); // Wait 1 second for app to load
+    }
+});
+
+// Also add a manual refresh button to the dashboard
+function refreshData() {
+    console.log('🔄 Manually refreshing data...');
+    
+    // Reload from localStorage
+    const students = JSON.parse(localStorage.getItem('students') || '[]');
+    const steuniceStudents = JSON.parse(localStorage.getItem('steunice_students') || '[]');
+    
+    // Use whichever has data
+    const finalStudents = students.length > 0 ? students : steuniceStudents;
+    
+    // Update localStorage with the correct key
+    if (finalStudents.length > 0) {
+        localStorage.setItem('students', JSON.stringify(finalStudents));
+        localStorage.setItem('steunice_students', JSON.stringify(finalStudents));
+    }
+    
+    // Reload displays
+    if (typeof loadStudents === 'function') loadStudents();
+    if (typeof loadPayments === 'function') loadPayments();
+    if (typeof updateDashboard === 'function') updateDashboard();
+    
+    // Also manually update the students tab if we're on it
+    const studentsList = document.getElementById('studentsList');
+    if (studentsList) {
+        let html = '';
+        finalStudents.forEach(student => {
+            const balance = student.annualFees - (student.feesPaid || 0);
+            html += `<tr>
+                <td>${student.admissionNo || 'N/A'}</td>
+                <td>${student.name}</td>
+                <td>${student.class || 'N/A'}</td>
+                <td>${student.parentName || 'N/A'}</td>
+                <td>${student.parentPhone || 'N/A'}</td>
+                <td><span class="status-badge ${balance > 0 ? 'status-unpaid' : 'status-paid'}">KES ${balance.toLocaleString()}</span></td>
+                <td>
+                    <button class="btn-small" onclick="viewStudent('${student.id}')">👁️</button>
+                </td>
+            </tr>`;
+        });
+        studentsList.innerHTML = html;
+    }
+    
+    alert(`✅ Refreshed! Found ${finalStudents.length} students`);
+}
+
+// Add a refresh button to the header
+window.onload = function() {
+    const header = document.querySelector('.header');
+    if (header) {
+        const refreshBtn = document.createElement('button');
+        refreshBtn.innerHTML = '🔄 Refresh Data';
+        refreshBtn.style.cssText = 'background: white; color: #003366; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; margin-left: 20px;';
+        refreshBtn.onclick = refreshData;
+        header.appendChild(refreshBtn);
+    }
+};
+</script>
