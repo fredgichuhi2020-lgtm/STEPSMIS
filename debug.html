@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug - St Eunice School</title>
+    <style>
+        body { font-family: Arial; padding: 20px; background: #f0f2f5; }
+        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; }
+        button { padding: 10px 20px; margin: 10px; cursor: pointer; background: #0066cc; color: white; border: none; border-radius: 5px; }
+        pre { background: #f8f9fa; padding: 15px; border-radius: 5px; overflow: auto; max-height: 400px; }
+        .success { color: green; font-weight: bold; }
+        .warning { color: orange; font-weight: bold; }
+        .stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; margin: 20px 0; }
+        .stat-card { background: #e9ecef; padding: 20px; border-radius: 10px; text-align: center; }
+        .stat-number { font-size: 32px; font-weight: bold; color: #0066cc; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 St Eunice School - Data Debugger</h1>
+        
+        <div class="stats">
+            <div class="stat-card">
+                <div>Students in storage</div>
+                <div class="stat-number" id="studentCount">0</div>
+            </div>
+            <div class="stat-card">
+                <div>Payments in storage</div>
+                <div class="stat-number" id="paymentCount">0</div>
+            </div>
+            <div class="stat-card">
+                <div>Total Fees (KES)</div>
+                <div class="stat-number" id="totalFees">0</div>
+            </div>
+        </div>
+
+        <div>
+            <button onclick="checkData()">🔄 Refresh Data</button>
+            <button onclick="fixData()">🔧 Fix & Save Data</button>
+            <button onclick="goToApp()">🏫 Go to Main App</button>
+            <button onclick="goToImport()">📥 Go to Import Tool</button>
+        </div>
+
+        <h3>Current Data in localStorage:</h3>
+        <pre id="dataDisplay">Loading...</pre>
+
+        <script>
+            function checkData() {
+                let output = '';
+                let students = [];
+                let payments = [];
+                
+                // Check all possible keys
+                const keys = [
+                    'students', 
+                    'steunice_students', 
+                    'payments', 
+                    'steunice_payments'
+                ];
+                
+                keys.forEach(key => {
+                    const data = localStorage.getItem(key);
+                    output += `\n📁 ${key}:\n`;
+                    if (data) {
+                        try {
+                            const parsed = JSON.parse(data);
+                            output += `   ✅ Found: ${parsed.length} items\n`;
+                            if (key.includes('student')) {
+                                students = parsed;
+                            }
+                            if (key.includes('payment')) {
+                                payments = parsed;
+                            }
+                            // Show first 2 items as sample
+                            if (parsed.length > 0) {
+                                output += `   Sample: ${JSON.stringify(parsed[0], null, 2).substring(0, 100)}...\n`;
+                            }
+                        } catch(e) {
+                            output += `   ❌ Error parsing: ${e.message}\n`;
+                        }
+                    } else {
+                        output += `   ❌ No data\n`;
+                    }
+                });
+                
+                document.getElementById('dataDisplay').textContent = output;
+                
+                // Update stats
+                document.getElementById('studentCount').textContent = students.length;
+                document.getElementById('paymentCount').textContent = payments.length;
+                
+                const total = payments.reduce((sum, p) => sum + (p.amount || 0), 0);
+                document.getElementById('totalFees').textContent = total.toLocaleString();
+            }
+
+            function fixData() {
+                // Find the data
+                let students = [];
+                let payments = [];
+                
+                const studentData = localStorage.getItem('steunice_students') || localStorage.getItem('students');
+                const paymentData = localStorage.getItem('steunice_payments') || localStorage.getItem('payments');
+                
+                if (studentData) {
+                    students = JSON.parse(studentData);
+                }
+                
+                if (paymentData) {
+                    payments = JSON.parse(paymentData);
+                }
+                
+                // Save to BOTH keys for compatibility
+                localStorage.setItem('students', JSON.stringify(students));
+                localStorage.setItem('steunice_students', JSON.stringify(students));
+                localStorage.setItem('payments', JSON.stringify(payments));
+                localStorage.setItem('steunice_payments', JSON.stringify(payments));
+                
+                alert(`✅ Fixed! Saved ${students.length} students and ${payments.length} payments to all keys`);
+                checkData();
+            }
+
+            function goToApp() {
+                window.location.href = 'index.html';
+            }
+
+            function goToImport() {
+                window.location.href = 'import.html';
+            }
+
+            // Run on load
+            checkData();
+        </script>
+    </div>
+</body>
+</html>
