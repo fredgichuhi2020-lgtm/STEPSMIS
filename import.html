@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Import Data - St Eunice School</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            padding: 20px;
+            margin: 0;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #003366;
+            margin-bottom: 20px;
+        }
+        .step {
+            background: #f8f9fa;
+            border-left: 4px solid #0066cc;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 0 10px 10px 0;
+        }
+        .btn {
+            background: #0066cc;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            margin: 10px 5px;
+        }
+        .btn:hover {
+            background: #003366;
+        }
+        .btn-success {
+            background: #28a745;
+        }
+        .btn-warning {
+            background: #ffc107;
+            color: #333;
+        }
+        .progress {
+            width: 100%;
+            height: 30px;
+            background: #e9ecef;
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 20px 0;
+            display: none;
+        }
+        .progress-bar {
+            height: 100%;
+            background: #28a745;
+            color: white;
+            text-align: center;
+            line-height: 30px;
+            transition: width 0.3s;
+        }
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            padding: 15px;
+            height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+            margin-top: 20px;
+        }
+        .log-entry {
+            padding: 5px;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .success { color: #28a745; }
+        .warning { color: #ffc107; }
+        .error { color: #dc3545; }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .stat-card {
+            background: #e9ecef;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #003366;
+        }
+        textarea {
+            width: 100%;
+            height: 200px;
+            font-family: monospace;
+            font-size: 12px;
+            padding: 10px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 St Eunice School - Data Import Tool</h1>
+        <p>Import student and fee data from your Excel spreadsheet</p>
+
+        <div class="step">
+            <h3>Step 1: Copy Data from Excel</h3>
+            <p>For each class sheet in your Excel file:</p>
+            <ol>
+                <li>Open your Excel file</li>
+                <li>Go to the sheet (e.g., "PG 2026", "PP1 2026", etc.)</li>
+                <li>Select ALL data (Ctrl+A)</li>
+                <li>Copy (Ctrl+C)</li>
+                <li>Paste into the box below</li>
+                <li>Click "Import Class Data"</li>
+            </ol>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div>Students Imported</div>
+                <div class="stat-number" id="studentCount">0</div>
+            </div>
+            <div class="stat-card">
+                <div>Payments Imported</div>
+                <div class="stat-number" id="paymentCount">0</div>
+            </div>
+            <div class="stat-card">
+                <div>Total Fees (KES)</div>
+                <div class="stat-number" id="totalFees">0</div>
+            </div>
+        </div>
+
+        <textarea id="excelData" placeholder="Paste Excel data here..."></textarea>
+
+        <div>
+            <select id="classSelect">
+                <option value="PG">Play Group (PG)</option>
+                <option value="PP1">Pre-Primary 1 (PP1)</option>
+                <option value="PP2">Pre-Primary 2 (PP2)</option>
+                <option value="Grade 1">Grade 1</option>
+                <option value="Grade 2">Grade 2</option>
+                <option value="Grade 3">Grade 3</option>
+                <option value="Grade 4">Grade 4</option>
+                <option value="Grade 5">Grade 5</option>
+                <option value="Grade 6">Grade 6</option>
+                <option value="Grade 7">Grade 7 (JSS 1)</option>
+                <option value="Grade 8">Grade 8 (JSS 2)</option>
+                <option value="Grade 9">Grade 9 (JSS 3)</option>
+            </select>
+            
+            <button class="btn" onclick="importClassData()">📥 Import Class Data</button>
+            <button class="btn btn-success" onclick="importAllSampleData()">📋 Import All Sample Data</button>
+            <button class="btn btn-warning" onclick="clearAllData()">⚠️ Clear All Data</button>
+        </div>
+
+        <div class="progress" id="progress">
+            <div class="progress-bar" id="progressBar">0%</div>
+        </div>
+
+        <div>
+            <button class="btn" onclick="viewData()">👁️ Preview Imported Data</button>
+            <button class="btn btn-success" onclick="saveToMainApp()">💾 Save to Main App</button>
+            <button class="btn" onclick="window.location.href='index.html'">🏫 Go to Main App</button>
+        </div>
+
+        <div class="log" id="log">
+            <div class="log-entry">Ready to import data...</div>
+        </div>
+    </div>
+
+    <script>
+        // Data storage
+        let importedStudents = [];
+        let importedPayments = [];
+        let logEntries = [];
+
+        // Add log entry
+        function addLog(message, type = 'info') {
+            const log = document.getElementById('log');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            log.appendChild(entry);
+            log.scrollTop = log.scrollHeight;
+            logEntries.push({ message, type, time: new Date() });
+        }
+
+        // Update stats
+        function updateStats() {
+            document.getElementById('studentCount').textContent = importedStudents.length;
+            document.getElementById('paymentCount').textContent = importedPayments.length;
+            
+            const total = importedPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
+            document.getElementById('totalFees').textContent = total.toLocaleString();
+        }
+
+        // Parse Excel data (tab-separated)
+        function parseExcelData(text, className) {
+            const lines = text.split('\n');
+            const students = [];
+            const payments = [];
+            
+            // Find header row (usually contains "NAMES" or "NAMES")
+            let startRow = 0;
+            for (let i = 0; i < Math.min(10, lines.length); i++) {
+                if (lines[i].toUpperCase().includes('NAMES') || lines[i].toUpperCase().includes('NAMES')) {
+                    startRow = i + 1;
+                    break;
+                }
+            }
+
+            addLog(`Parsing data for ${className}...`);
+
+            // Process each row
+            for (let i = startRow; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (!line || line.startsWith('TOTAL') || line.startsWith('SUM') || line.includes('======')) continue;
+
+                // Split by tab
+                const columns = line.split('\t');
+                if (columns.length < 3) continue;
+
+                // Try to find student name (usually in column 1 or 2)
+                let name = '';
+                for (let j = 0; j < Math.min(3, columns.length); j++) {
+                    if (columns[j] && !columns[j].match(/^[0-9\-\+\=\*\/]+$/)) {
+                        name = columns[j].trim();
+                        break;
+                    }
+                }
+
+                if (!name || name.length < 3) continue;
+
+                // Look for fees data in the row
+                const feesDue = findNumberInRow(columns, 'FEES', 'TERM');
+                const arrears = findNumberInRow(columns, 'ARREARS');
+                const janPayment = findNumberInRow(columns, 'JANUARY');
+                const febPayment = findNumberInRow(columns, 'FEBRUARY');
+                const marPayment = findNumberInRow(columns, 'MARCH');
+
+                // Create student record
+                const student = {
+                    id: `student_${Date.now()}_${i}`,
+                    admissionNo: generateAdmissionNo(className, students.length + 1),
+                    name: name,
+                    class: className,
+                    parentName: 'Parent Name (Update)',
+                    parentPhone: '0712345678',
+                    altPhone: '',
+                    annualFees: Math.abs(feesDue || 45000),
+                    feesPaid: Math.abs(janPayment + febPayment + marPayment)
+                };
+
+                students.push(student);
+                addLog(`✓ Found student: ${name} - Fees: KES ${student.annualFees.toLocaleString()}`);
+
+                // Create payment records from the data
+                if (janPayment > 0) {
+                    payments.push({
+                        id: `payment_${Date.now()}_${i}_jan`,
+                        studentId: student.id,
+                        studentName: name,
+                        term: 'Term 1',
+                        amount: janPayment,
+                        method: 'M-PESA',
+                        transactionNo: `IMP${Date.now()}`,
+                        date: '2026-01-15',
+                        balance: student.annualFees - janPayment
+                    });
+                }
+
+                if (febPayment > 0) {
+                    payments.push({
+                        id: `payment_${Date.now()}_${i}_feb`,
+                        studentId: student.id,
+                        studentName: name,
+                        term: 'Term 1',
+                        amount: febPayment,
+                        method: 'M-PESA',
+                        transactionNo: `IMP${Date.now()}`,
+                        date: '2026-02-15',
+                        balance: student.annualFees - janPayment - febPayment
+                    });
+                }
+            }
+
+            addLog(`✅ Found ${students.length} students and ${payments.length} payments for ${className}`);
+            return { students, payments };
+        }
+
+        // Helper to find numbers in row
+        function findNumberInRow(columns, ...keywords) {
+            for (let col of columns) {
+                const num = parseFloat(col.replace(/[^0-9\-\.]/g, ''));
+                if (!isNaN(num) && num !== 0) {
+                    return Math.abs(num);
+                }
+            }
+            return 0;
+        }
+
+        // Generate admission number
+        function generateAdmissionNo(className, index) {
+            const prefix = className.replace(' ', '');
+            const year = new Date().getFullYear();
+            return `${year}/${prefix}/${String(index).padStart(3, '0')}`;
+        }
+
+        // Import class data from textarea
+        function importClassData() {
+            const data = document.getElementById('excelData').value;
+            const className = document.getElementById('classSelect').value;
+
+            if (!data) {
+                addLog('❌ Please paste Excel data first', 'error');
+                return;
+            }
+
+            const progress = document.getElementById('progress');
+            const progressBar = document.getElementById('progressBar');
+            progress.style.display = 'block';
+            progressBar.style.width = '50%';
+            progressBar.textContent = 'Processing...';
+
+            setTimeout(() => {
+                const result = parseExcelData(data, className);
+                importedStudents = [...importedStudents, ...result.students];
+                importedPayments = [...importedPayments, ...result.payments];
+
+                progressBar.style.width = '100%';
+                progressBar.textContent = 'Complete!';
+                updateStats();
+                addLog(`✨ Import complete: ${result.students.length} students, ${result.payments.length} payments`);
+
+                setTimeout(() => {
+                    progress.style.display = 'none';
+                    progressBar.style.width = '0%';
+                }, 2000);
+            }, 100);
+        }
+
+        // Import sample data for testing
+        function importAllSampleData() {
+            addLog('📋 Importing sample data...', 'warning');
+            
+            // Create sample students from your PG class
+            const sampleStudents = [
+                { name: 'Ariela Mukami', class: 'PG', fees: 12000, paid: 15000 },
+                { name: 'Azael Kbreab', class: 'PG', fees: 12000, paid: 15000 },
+                { name: 'Maya Wanjiku', class: 'PG', fees: 12000, paid: 17000 },
+                { name: 'Laurine Nyaeri', class: 'PG', fees: 12000, paid: 15000 },
+                { name: 'Nyanjoe Wachira', class: 'PG', fees: 12000, paid: 15000 },
+                { name: 'Ryan Myles', class: 'PG', fees: 12000, paid: 15000 },
+                { name: 'Jayden Mwaura', class: 'PG', fees: 12000, paid: 14200 },
+                { name: 'Gianna Wanjiku', class: 'PG', fees: 12000, paid: 15000 },
+                { name: 'Amias Barasa', class: 'PG', fees: 12000, paid: 11000 },
+                { name: 'Mshindi Kinyanjui', class: 'PG', fees: 12000, paid: 18000 },
+                { name: 'Stacy Nasipai', class: 'PG', fees: 12000, paid: 19000 },
+                { name: 'Abigael Akinyi', class: 'PG', fees: 12000, paid: 14000 }
+            ];
+
+            sampleStudents.forEach((s, index) => {
+                const student = {
+                    id: `sample_${Date.now()}_${index}`,
+                    admissionNo: `2026/PG/${String(index + 1).padStart(3, '0')}`,
+                    name: s.name,
+                    class: s.class,
+                    parentName: 'Parent Name',
+                    parentPhone: '0712345678',
+                    altPhone: '',
+                    annualFees: s.fees,
+                    feesPaid: s.paid
+                };
+                importedStudents.push(student);
+
+                if (s.paid > 0) {
+                    importedPayments.push({
+                        id: `payment_${Date.now()}_${index}`,
+                        studentId: student.id,
+                        studentName: s.name,
+                        term: 'Term 1',
+                        amount: s.paid,
+                        method: 'M-PESA',
+                        transactionNo: `MP${Date.now()}`,
+                        date: '2026-01-15',
+                        balance: s.fees - s.paid
+                    });
+                }
+            });
+
+            updateStats();
+            addLog(`✅ Imported ${sampleStudents.length} sample students from PG class`);
+        }
+
+        // Clear all data
+        function clearAllData() {
+            if (confirm('Are you sure? This will clear all imported data!')) {
+                importedStudents = [];
+                importedPayments = [];
+                updateStats();
+                addLog('🗑️ All data cleared', 'warning');
+                document.getElementById('log').innerHTML = '<div class="log-entry">Ready to import data...</div>';
+            }
+        }
+
+        // Preview imported data
+        function viewData() {
+            let preview = 'IMPORTED STUDENTS:\n';
+            importedStudents.slice(0, 10).forEach(s => {
+                preview += `${s.admissionNo} - ${s.name} (${s.class}): KES ${s.feesPaid.toLocaleString()}/${s.annualFees.toLocaleString()}\n`;
+            });
+            
+            if (importedStudents.length > 10) {
+                preview += `... and ${importedStudents.length - 10} more students\n`;
+            }
+
+            preview += `\nTOTAL: ${importedStudents.length} students, ${importedPayments.length} payments, KES ${importedPayments.reduce((s,p)=>s+p.amount,0).toLocaleString()}`;
+            
+            alert(preview);
+        }
+
+        // Save to main app
+        function saveToMainApp() {
+            // Save to localStorage with the same keys used by main app
+            localStorage.setItem('steunice_students', JSON.stringify(importedStudents));
+            localStorage.setItem('steunice_payments', JSON.stringify(importedPayments));
+            
+            // Also save to the original keys for compatibility
+            localStorage.setItem('students', JSON.stringify(importedStudents));
+            localStorage.setItem('payments', JSON.stringify(importedPayments));
+            
+            addLog('💾 Data saved to main app!', 'success');
+            addLog(`✅ You can now go to the main app and see ${importedStudents.length} students and KES ${importedPayments.reduce((s,p)=>s+p.amount,0).toLocaleString()} in fees`);
+            
+            // Offer to go to main app
+            if (confirm('Data saved! Go to main app now?')) {
+                window.location.href = 'index.html';
+            }
+        }
+
+        // Initialize
+        updateStats();
+        addLog('📊 Import tool ready - paste your Excel data and select class');
+    </script>
+</body>
+</html>
